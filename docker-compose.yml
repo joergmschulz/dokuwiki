@@ -1,0 +1,86 @@
+version: '3.7'
+# this builds some web servers for my environment
+
+# http://geekyplatypus.com/dockerise-your-php-application-with-nginx-and-php7-fpm/
+
+services:
+  dokuwiki-nginx:
+    # image:  joergschulz/dokuwiki
+    image: nginxinc/nginx-unprivileged:alpine
+    container_name: dokuwiki
+    hostname: dokuwiki
+    restart: unless-stopped
+    # build:
+    #  context: ./docker-dokuwiki
+    #  args:
+    #     NGINX_GID: ${NGINX_GID:-0}
+    #     NGINX_UID: ${NGINX_UID:-1001}
+    #     NGINX_GROUP: ${NGINX_GROUP:-www-data}
+    #     NGINX_USER : ${NGINX_USER:-nginx}
+    labels:
+      - traefik.enable=true
+      - "traefik.http.routers.wiki.rule=Host(`wiki.${DOMAIN}.de`)"
+      - "traefik.http.routers.wiki.tls=true"
+      - "traefik.http.routers.wiki.entrypoints=websecure"
+      - traefik.port=8080
+      # - traefik.port=9000
+      - traefik.docker.network=traefik
+      - traefik.backend=dokuwiki
+    ports:
+      - "8080:8080"
+    environment:
+        - TIMEZONE=Europe/Berlin
+        - LDAP_HOSTS=${LDAP_HOSTS}
+        - LDAP_PASSWORD=${LDAP_PASSWORD}
+        - LDAP_USER=${LDAP_USER}
+        - LDAP_BASE=${LDAP_BASE}
+        - LDAP_USER_FILTER=${LDAP_USER_FILTER}
+        - LDAP_PASS_FILTER=${LDAP_PASS_FILTER}
+        - LDAP_ITERATE_FILTER=${LDAP_ITERATE_FILTER}
+        - IMAP_AUTH_VERBOSE=${IMAP_AUTH_VERBOSE:-no}
+        - IMAP_MAIL_DEBUG=${IMAP_MAIL_DEBUG:-no}
+        - DOMAIN=${DOMAIN}
+        - SMTPHOST=exim-int-mailout:1587
+    volumes:
+      # content data should have a vol....
+      # ${WIKI_CONF:-/data/$DOMAIN/wiki/conf}:/var/www/html/dokuwiki/conf
+      - ${WIKI_DATA:-/data/$DOMAIN/wiki/}:/var/www/html/
+      - ./conf.d:/etc/nginx/conf.d
+
+    networks:
+      traefik:
+      services:
+        ipv4_address: 172.20.3.1
+    extra_hosts:
+        - "c.elternserver.local:10.100.101.13"
+        - conference.faudin.de:10.100.101.17
+        - "mail3.elternserver.local:10.100.101.13"
+        - "c.sohoserver.local:10.100.101.15"
+        - "m.datilo.de:172.26.0.1"
+        - "murg.elternserver.local:10.100.101.16"
+        - "murg.elternserver.local:172.26.0.1"
+        - "murg.elternserver.de:172.26.0.1"
+
+  dokuwiki-fpm:
+    image: php:7.4-fpm-alpine
+    ports:
+      - "9000:9000"
+    container_name: dokuwiki-fpm
+    hostname: dokuwiki-fpm
+
+    environment:
+        - TIMEZONE=Europe/Berlin
+    volumes:
+      # content data should have a vol....
+      # - ${WIKI_CONF:-/data/$DOMAIN/wiki/conf}:/var/www/html/dokuwiki/conf
+      - ${WIKI_DATA:-/data/$DOMAIN/wiki/}:/var/www/html/
+    networks:
+      services:
+        ipv4_address: 172.20.3.2
+
+
+networks:
+  traefik:
+    external: true
+  services:
+    external: true
