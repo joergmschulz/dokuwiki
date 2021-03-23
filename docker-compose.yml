@@ -63,8 +63,8 @@ services:
 
   dokuwiki-fpm:
     image: php:7.4-fpm-alpine
-    ports:
-      - "9000:9000"
+    # ports:
+    #  - "9000:9000"
     container_name: dokuwiki-fpm
     hostname: dokuwiki-fpm
 
