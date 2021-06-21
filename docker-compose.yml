@@ -9,7 +9,9 @@ services:
     image: nginxinc/nginx-unprivileged:alpine
     container_name: dokuwiki
     hostname: dokuwiki
-    restart: unless-stopped
+    restart: "no"
+    depends_on:
+      - dokuwiki-fpm
     # build:
     #  context: ./docker-dokuwiki
     #  args:
@@ -27,7 +29,7 @@ services:
       - traefik.docker.network=traefik
       - traefik.backend=dokuwiki
     ports:
-      - "8080:8080"
+      - "8088:8080"
     environment:
         - TIMEZONE=Europe/Berlin
         - LDAP_HOSTS=${LDAP_HOSTS}
@@ -62,12 +64,14 @@ services:
         - "murg.elternserver.de:172.26.0.1"
 
   dokuwiki-fpm:
-    image: php:7.4-fpm-alpine
+    image: joergschulz/php-7.4-fpm-alpine
+    build:
+       context: ./php-fpm-alpine
     # ports:
     #  - "9000:9000"
     container_name: dokuwiki-fpm
     hostname: dokuwiki-fpm
-
+    restart: "no"
     environment:
         - TIMEZONE=Europe/Berlin
     volumes:
