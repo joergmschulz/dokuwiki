@@ -52,7 +52,7 @@ services:
     networks:
       traefik:
       services:
-        ipv4_address: 172.20.3.1
+        # ipv4_address: 172.20.3.1
     extra_hosts:
         - "c.elternserver.local:10.100.101.13"
         - conference.faudin.de:10.100.101.17
@@ -80,7 +80,7 @@ services:
       - ${WIKI_DATA:-/data/$DOMAIN/wiki/}:/var/www/html/
     networks:
       services:
-        ipv4_address: 172.20.3.2
+        # ipv4_address: 172.20.3.2
 
 
 networks:
